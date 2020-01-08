@@ -1,10 +1,14 @@
+#!/usr/bin/env python
+# license removed for brevity
+import rospy
+from sensor_msgs.msg import Imu
 import sys, getopt
-
 sys.path.append('.')
 import RTIMU
 import os.path
 import time
 import math
+
 
 SETTINGS_FILE = "RTIMULib"
 
@@ -63,15 +67,40 @@ print("Recommended Poll Interval: %dmS\n" % poll_interval)
 
 while True:
   if imu.IMURead():
+
+    pub = rospy.Publisher('nothing', Imu, queue_size=1)
+    # Initialize the node and name it.
+    rospy.init_node('imu')
+
     # x, y, z = imu.getFusionData()
     # print("%f %f %f" % (x,y,z))
     data = imu.getIMUData()
     (data["pressureValid"], data["pressure"], data["temperatureValid"], data["temperature"]) = pressure.pressureRead()
     fusionPose = data["fusionPose"]
-    print("r: %f p: %f y: %f" % (math.degrees(fusionPose[0]), 
-        math.degrees(fusionPose[1]), math.degrees(fusionPose[2])))
+    
+    #ROS sensor_msgs/Imu Message
+    fusionQPose = data["fusionQPose"]
+    gyro = data["gyro"]
+    accel = data["accel"]
+
+    #print("r: %f p: %f y: %f" % (math.degrees(fusionPose[0]), 
+        #math.degrees(fusionPose[1]), math.degrees(fusionPose[2])))
+    seq = 0
+    imu_msg = Imu()
+    imu_msg.linear_acceleration = accel
+    imu_msg.angular_velocity = gyro
+    imu_msg.orientation = fusionQPose
+    imu_msg.header.stamp = rospy.Time.now()
+    imu_msg.header.frame_id = imu
+    imu_msg.header.seq = seq
+    seq += 1
+    rospy.loginfo('Starting ImuPublisherNode')
+    pub.publish(imu_msg)
+    time.sleep(1/1000)
+
     if (data["pressureValid"]):
         print("Pressure: %f, height above sea level: %f" % (data["pressure"], computeHeight(data["pressure"])))
     if (data["temperatureValid"]):
         print("Temperature: %f" % (data["temperature"]))
     time.sleep(poll_interval*1.0/1000.0)
+
