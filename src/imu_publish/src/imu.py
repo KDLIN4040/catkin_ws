@@ -64,13 +64,13 @@ else:
 
 poll_interval = imu.IMUGetPollInterval()
 print("Recommended Poll Interval: %dmS\n" % poll_interval)
-
+pub = rospy.Publisher('imu', Imu, queue_size=1)
+# Initialize the node and name it.
+rospy.init_node('imu_publish')
+rospy.loginfo('Starting ImuPublisherNode')
 while True:
+  
   if imu.IMURead():
-
-    pub = rospy.Publisher('nothing', Imu, queue_size=1)
-    # Initialize the node and name it.
-    rospy.init_node('imu')
 
     # x, y, z = imu.getFusionData()
     # print("%f %f %f" % (x,y,z))
@@ -94,8 +94,8 @@ while True:
     imu_msg.header.frame_id = imu
     imu_msg.header.seq = seq
     seq += 1
-    rospy.loginfo('Starting ImuPublisherNode')
     pub.publish(imu_msg)
+    #print(imu_msg)
     time.sleep(1/1000)
 
     if (data["pressureValid"]):
