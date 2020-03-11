@@ -8,16 +8,32 @@
         background-color: #f1f1f1;
       }
       </style>
+   <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
    </head>
-   <body onload="startGame()">
+   <!--<iframe src="http://192.168.11.29:8080/" width="400" height="320"></iframe><p>-->
+ <body >
+        <button onclick="forward()">forward</button><br>
+        <button onclick="turnright()">turnright</button><br>
+        <button onclick="turnleft()">turnleft</button><br>
+        <button onclick="backward()">backward</button><br>
+        <button onclick="stopmotors()">stopmotors</button><br>
+        <iframe src="http://192.168.11.29:8080/" height="320" width="400"></iframe> 
         <h1>Actuators</h1>
-        <h3>GO FORWARD ==> {{  forward  }} ==>    
+        <h3>AUTO ==> {{ auto}} ==>
+            {%if auto == 1%}
+                <a href="/auto/off" class ="button">TURN OFF</a>
+            {%else%}
+                <a href="/auto/on" class ="button">TURN ON</a>
+            {%endif%}
+        </h3>
+	<h3>GO FORWARD ==> {{  forward  }} ==>    
             {%if forward == 1%} 
                 <a href="/forward/off" class ="button" >TURN OFF</a> 
             {%else%} 
                 <a href="/forward/on"  class ="button">TURN ON</a> 
             {%endif%}     
-        </h3>
+        </h3>        
+         
         <h3>TURN RIGHT ==> {{  turnright  }} ==>    
             {%if turnright == 1%} 
                 <a href="/turnright/off" class="button">TURN OFF</a> 
@@ -45,67 +61,58 @@
             {%else%} 
                 <a href="/stopmotors/on"  class ="button">TURN ON</a> 
             {%endif%}     
-        </h3>
-   <script>
-    var myGamePiece;
 
-    function startGame() {
-        myGameArea.start();
-        myGamePiece = new component(30, 30, "red", 10, 120);
-    }
+       </h3>
+<script>
+function forward(){
+  $.ajax({
+  url:'http://192.168.11.29:81/forward/on',
+  type:'get',
+  cache:false
+})  
+}
 
-    var myGameArea = {
-        canvas : document.createElement("canvas"),
-        start : function() {
-            this.canvas.width = 480;
-            this.canvas.height = 270;
-            this.context = this.canvas.getContext("2d");
-            document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-            this.interval = setInterval(updateGameArea, 20);
-            window.addEventListener('keydown', function (e) {
-                myGameArea.keys = (myGameArea.keys || []);
-                myGameArea.keys[e.keyCode] = (e.type == "keydown");
-            })
-            window.addEventListener('keyup', function (e) {
-                myGameArea.keys[e.keyCode] = (e.type == "keydown");            
-            })
-        }, 
-        clear : function(){
-            this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        }
-    }
+function turnright(){
+ $.ajax({
+  url:'http://192.168.11.29:81/turnright/on',
+  type:'get',
+  cache:false
+})
+}
 
-    function component(width, height, color, x, y) {
-        this.gamearea = myGameArea;
-        this.width = width;
-        this.height = height;
-        this.speedX = 0;
-        this.speedY = 0;    
-        this.x = x;
-        this.y = y;    
-        this.update = function() {
-            ctx = myGameArea.context;
-            ctx.fillStyle = color;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-        }
-        this.newPos = function() {
-            this.x += this.speedX;
-            this.y += this.speedY;        
-        }    
-    }
+function turnleft(){
+ $.ajax({
+  url:'http://192.168.11.29:81/turnleft/on',
+  type:'get',
+  cache:false
+})
+}
 
-    function updateGameArea() {
-        myGameArea.clear();
-        myGamePiece.speedX = 0;
-        myGamePiece.speedY = 0;    
-        if (myGameArea.keys && myGameArea.keys[37]) {myGamePiece.speedX = -1;window.location.assign("http://192.168.11.48:81/turnleft/on"); }
-        if (myGameArea.keys && myGameArea.keys[39]) {myGamePiece.speedX = 1;window.location.assign("http://192.168.11.48:81/turnright/on"); }
-        if (myGameArea.keys && myGameArea.keys[38]) {myGamePiece.speedY = -1;window.location.assign("http://192.168.11.48:81/forward/on"); }
-        if (myGameArea.keys && myGameArea.keys[40]) {myGamePiece.speedY = 1;window.location.assign("http://192.168.11.48:81/backward/on"); }
-        if (myGameArea.keys && myGameArea.keys[35]) {window.location.assign("http://192.168.11.48:81/stopmotors/on");}
-        myGamePiece.newPos();    
-        myGamePiece.update();
-    }
+function backward(){
+ $.ajax({
+  url:'http://192.168.11.29:81/backward/on',
+  type:'get',
+  cache:false
+})
+}
+
+function stopmotors(){
+ $.ajax({
+  url:'http://192.168.11.29:81/stopmotors/on',
+  type:'get',
+  cache:false
+})
+} 
+
+
+  window.addEventListener('keydown', function (e) {
+             var keyid =e.keyCode;
+             if (keyid == 37) {turnleft()}
+             if (keyid == 39) {turnright()}
+             if (keyid == 38) {forward()}
+             if (keyid == 40) {backward()}
+             if (keyid == 35) {stopmotors()}
+   })  
    </script>     
    </body>
 </html>

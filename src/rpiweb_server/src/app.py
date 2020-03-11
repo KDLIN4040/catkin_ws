@@ -2,6 +2,7 @@
   Raspberry Pi GPIO Status and Control
 '''
 import RPi.GPIO as GPIO
+import wallfollower as wf
 from flask import Flask, render_template, request
 import time
 app = Flask(__name__)
@@ -12,7 +13,7 @@ GPIO.setwarnings(False)
 right_motorEA_pin=12
 right_motor_pin1 = 16
 right_motor_pin2 = 18
-left_motorEB_pin = 26
+left_motorEB_pin = 22
 left_motor_pin1 = 32
 left_motor_pin2 = 24
 
@@ -36,7 +37,7 @@ l = GPIO.PWM(left_motorEB_pin,50) # GPIO for PWM with 50Hz
 
 
 #define car movement
-def forward():
+def backward():
   GPIO.output(right_motor_pin1,1)
   GPIO.output(right_motor_pin2,0)
   GPIO.output(left_motor_pin1 ,1)
@@ -44,7 +45,7 @@ def forward():
   r.start(100)
   l.start(100)
 
-def backward():
+def forward():
   GPIO.output(right_motor_pin1,0)
   GPIO.output(right_motor_pin2,1)
   GPIO.output(left_motor_pin1 ,0)
@@ -97,13 +98,15 @@ def index():
   
 @app.route("/<deviceName>/<action>")
 def action(deviceName, action):
-  global movement
   global forwardSts
   global backwardSts
   global turnrightSts
   global turnleftSts
-
-  if deviceName == 'forward':
+  global autoflag
+  
+  if deviceName == 'auto':
+    movement = 'auto'
+  elif deviceName == 'forward':
     movement = 'forward'
   elif deviceName == 'turnright':
     movement = 'turnright'
@@ -115,7 +118,9 @@ def action(deviceName, action):
     movement = 'stopmotors'
 
   if action == "on":
-    if movement == "forward" :
+    if movement == "auto" :
+      autoflag = True        
+    elif movement == "forward" :
       forward()
     elif movement == "turnright":
       turnright()
@@ -127,7 +132,9 @@ def action(deviceName, action):
       stopmotors()
 
   if action == "off":
-    if movement == "forward" :
+    if movement == "auto" :
+      autoflag = False
+    elif movement == "forward" :
       stopmotors()
     elif movement == "turnright":
       stopmotors()
@@ -146,3 +153,5 @@ def action(deviceName, action):
   return render_template('index.html', **templateData)
 if __name__ == "__main__":
    app.run(host='0.0.0.0', port=81, debug=True)
+   t = wf.wallfollower()
+   t.start()
